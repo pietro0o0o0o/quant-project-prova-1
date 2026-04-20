@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Quant Dashboard</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+  <header class="page-header">
+    <h1>Quant Dashboard</h1>
+    <p>Monte Carlo simulation · MA crossover backtest · Risk analysis</p>
+  </header>
+
+  <div class="dashboard">
+
+    <!-- ===== TABS ===== -->
+    <div class="tabs">
+      <button class="tab active" onclick="switchTab('mc')">Monte Carlo</button>
+      <button class="tab"        onclick="switchTab('bt')">Backtest</button>
+      <button class="tab"        onclick="switchTab('risk')">Risk Analysis</button>
+    </div>
+
+    <!-- ===== MONTE CARLO PANEL ===== -->
+    <div id="panel-mc" class="panel active">
+
+      <div class="controls">
+        <div class="ctrl">
+          <label>Prezzo iniziale (€)</label>
+          <div class="ctrl-row">
+            <input type="range" id="mc-S0" min="50" max="500" step="10" value="100" />
+            <span class="ctrl-val" id="mc-S0-v">100</span>
+          </div>
+        </div>
+        <div class="ctrl">
+          <label>Rendimento annuo (%)</label>
+          <div class="ctrl-row">
+            <input type="range" id="mc-mu" min="-20" max="40" step="1" value="8" />
+            <span class="ctrl-val" id="mc-mu-v">8%</span>
+          </div>
+        </div>
+        <div class="ctrl">
+          <label>Volatilità annua (%)</label>
+          <div class="ctrl-row">
+            <input type="range" id="mc-sigma" min="5" max="60" step="1" value="20" />
+            <span class="ctrl-val" id="mc-sigma-v">20%</span>
+          </div>
+        </div>
+        <div class="ctrl">
+          <label>Simulazioni</label>
+          <div class="ctrl-row">
+            <input type="range" id="mc-N" min="50" max="500" step="50" value="200" />
+            <span class="ctrl-val" id="mc-N-v">200</span>
+          </div>
+        </div>
+        <div class="ctrl">
+          <label>Giorni di previsione</label>
+          <div class="ctrl-row">
+            <input type="range" id="mc-T" min="30" max="500" step="10" value="252" />
+            <span class="ctrl-val" id="mc-T-v">252</span>
+          </div>
+        </div>
+        <div class="ctrl" style="justify-content:flex-end;align-items:flex-end">
+          <button class="run-btn" onclick="runMC()">Esegui simulazione</button>
+        </div>
+      </div>
+
+      <div class="metrics" id="mc-metrics"></div>
+
+      <div class="legend">
+        <span><span class="leg-dot" style="background:#3266ad"></span>Percorsi individuali</span>
+        <span><span class="leg-dot" style="background:#E24B4A"></span>Mediana</span>
+        <span><span class="leg-dot" style="background:#1D9E75"></span>Percentile 75°</span>
+        <span><span class="leg-dot" style="background:#BA7517"></span>Percentile 25°</span>
+      </div>
+
+      <div class="chart-wrap" style="height:320px">
+        <canvas id="mcChart" role="img" aria-label="Simulazione Monte Carlo dei percorsi di prezzo">
+          Grafico percorsi Monte Carlo
+        </canvas>
+      </div>
+
+    </div>
+
+    <!-- ===== BACKTEST PANEL ===== -->
+    <div id="panel-bt" class="panel">
+
+      <div class="controls">
+        <div class="ctrl">
+          <label>Prezzo iniziale (€)</label>
+          <div class="ctrl-row">
+            <input type="range" id="bt-S0" min="50" max="300" step="10" value="100" />
+            <span class="ctrl-val" id="bt-S0-v">100</span>
+          </div>
+        </div>
+        <div class="ctrl">
+          <label>MA veloce (giorni)</label>
+          <div class="ctrl-row">
+            <input type="range" id="bt-fast" min="5" max="50" step="1" value="20" />
+            <span class="ctrl-val" id="bt-fast-v">20</span>
+          </div>
+        </div>
+        <div class="ctrl">
+          <label>MA lenta (giorni)</label>
+          <div class="ctrl-row">
+            <input type="range" id="bt-slow" min="20" max="200" step="5" value="50" />
+            <span class="ctrl-val" id="bt-slow-v">50</span>
+          </div>
+        </div>
+        <div class="ctrl">
+          <label>Volatilità (%)</label>
+          <div class="ctrl-row">
+            <input type="range" id="bt-vol" min="5" max="50" step="1" value="18" />
+            <span class="ctrl-val" id="bt-vol-v">18%</span>
+          </div>
+        </div>
+        <div class="ctrl">
+          <label>Giorni di storia</label>
+          <div class="ctrl-row">
+            <input type="range" id="bt-days" min="200" max="1000" step="50" value="500" />
+            <span class="ctrl-val" id="bt-days-v">500</span>
+          </div>
+        </div>
+        <div class="ctrl" style="justify-content:flex-end;align-items:flex-end">
+          <button class="run-btn" onclick="runBT()">Esegui backtest</button>
+        </div>
+      </div>
+
+      <div class="metrics" id="bt-metrics"></div>
+
+      <div class="two-col">
+        <div>
+          <div class="section-title">Prezzo &amp; segnali</div>
+          <div class="legend">
+            <span><span class="leg-dot" style="background:#3266ad"></span>Prezzo</span>
+            <span><span class="leg-dot" style="background:#E24B4A"></span>MA veloce</span>
+            <span><span class="leg-dot" style="background:#1D9E75"></span>MA lenta</span>
+          </div>
+          <div class="chart-wrap" style="height:220px">
+            <canvas id="btPriceChart" role="img" aria-label="Grafico prezzo con medie mobili e segnali di trading">
+              Grafico prezzo e medie mobili
+            </canvas>
+          </div>
+        </div>
+        <div>
+          <div class="section-title">Equity curve</div>
+          <div class="legend">
+            <span><span class="leg-dot" style="background:#3266ad"></span>Strategia</span>
+            <span><span class="leg-dot" style="background:#888"></span>Buy &amp; Hold</span>
+          </div>
+          <div class="chart-wrap" style="height:220px">
+            <canvas id="btEquityChart" role="img" aria-label="Equity curve della strategia vs buy and hold">
+              Equity curve
+            </canvas>
+          </div>
+        </div>
+      </div>
+
+      <div style="margin-top:1.5rem">
+        <div class="section-title">Ultimi trade</div>
+        <div id="bt-trades"></div>
+      </div>
+
+    </div>
+
+    <!-- ===== RISK PANEL ===== -->
+    <div id="panel-risk" class="panel">
+
+      <div class="controls">
+        <div class="ctrl">
+          <label>Rendimento annuo (%)</label>
+          <div class="ctrl-row">
+            <input type="range" id="r-mu" min="-10" max="40" step="1" value="8" />
+            <span class="ctrl-val" id="r-mu-v">8%</span>
+          </div>
+        </div>
+        <div class="ctrl">
+          <label>Volatilità annua (%)</label>
+          <div class="ctrl-row">
+            <input type="range" id="r-sigma" min="5" max="60" step="1" value="20" />
+            <span class="ctrl-val" id="r-sigma-v">20%</span>
+          </div>
+        </div>
+        <div class="ctrl">
+          <label>Portafoglio (€)</label>
+          <div class="ctrl-row">
+            <input type="range" id="r-port" min="10000" max="500000" step="10000" value="100000" />
+            <span class="ctrl-val" id="r-port-v">100k</span>
+          </div>
+        </div>
+        <div class="ctrl">
+          <label>Giorni VaR</label>
+          <div class="ctrl-row">
+            <input type="range" id="r-var" min="1" max="30" step="1" value="1" />
+            <span class="ctrl-val" id="r-var-v">1</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="metrics" id="risk-metrics"></div>
+
+      <div class="two-col" style="margin-top:1rem">
+        <div>
+          <div class="section-title">Distribuzione dei rendimenti</div>
+          <div class="chart-wrap" style="height:240px">
+            <canvas id="riskDistChart" role="img" aria-label="Istogramma distribuzione rendimenti giornalieri, zona rossa = perdite oltre VaR 95%">
+              Distribuzione dei rendimenti
+            </canvas>
+          </div>
+        </div>
+        <div>
+          <div class="section-title">Drawdown nel tempo</div>
+          <div class="chart-wrap" style="height:240px">
+            <canvas id="riskDdChart" role="img" aria-label="Drawdown nel tempo su percorso simulato">
+              Drawdown nel tempo
+            </canvas>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+  </div><!-- /.dashboard -->
+
+  <!-- Chart.js CDN -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+
+  <!-- App modules (ES modules) -->
+  <script type="module" src="js/main.js"></script>
+
+</body>
+</html>
